@@ -9,7 +9,7 @@ fi
 log() { printf '[startup] %s\n' "$*"; }
 
 log 'Installing JavaScript dependencies'
-npm ci
+npm install --no-package-lock
 
 log 'Running build and tests'
 npm run build
