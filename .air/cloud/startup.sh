@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 echo "[startup] installing dependencies"
-npm ci
+npm install --no-audit --no-fund
 
 echo "[startup] running build"
 npm run build
