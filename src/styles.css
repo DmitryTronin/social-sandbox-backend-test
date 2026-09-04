@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root { color: #182230; background: #f4f7fb; font-family: 'DM Sans', sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+.app { max-width: 680px; min-height: 100vh; margin: 0 auto; padding: 48px 20px; }
+.app-header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 28px; }
+.eyebrow { margin: 0 0 6px; color: #5370a0; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+h1 { margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 8vw, 3rem); letter-spacing: -.06em; }
+.tweet-total { color: #6b7b92; font-size: .9rem; }
+.search-label { display: block; margin-bottom: 8px; color: #53647b; font-size: .85rem; font-weight: 700; }
+.search-input { width: 100%; padding: 13px 16px; border: 1px solid #dbe3ef; border-radius: 12px; outline: none; background: #fff; color: #182230; box-shadow: 0 4px 14px #263b5b0d; }
+.search-input:focus { border-color: #6d8fd0; box-shadow: 0 0 0 3px #6d8fd033; }
+.feed { overflow: hidden; margin-top: 20px; border: 1px solid #e1e8f2; border-radius: 16px; background: #fff; box-shadow: 0 12px 35px #263b5b0d; }
+.tweet { display: flex; gap: 12px; padding: 20px; border-bottom: 1px solid #e9eef5; }
+.tweet:last-child { border-bottom: 0; }
+.avatar { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: #f0f3f8; }
+.tweet-body { min-width: 0; flex: 1; }
+.tweet-header { display: flex; align-items: center; gap: 5px; color: #718096; font-size: .9rem; }
+.name { color: #182230; font-weight: 700; }
+.dot { color: #a4afbf; }
+.tweet-header time { white-space: nowrap; }
+.tweet-text { margin: 8px 0 14px; line-height: 1.5; }
+.tweet-actions { display: flex; gap: 20px; }
+.tweet-actions button { padding: 4px 0; border: 0; background: none; color: #6b7b92; cursor: pointer; font-size: .82rem; }
+.tweet-actions button:hover, .tweet-actions button:focus-visible { color: #315da8; }
+.tweet-actions .is-retweeted { color: #079669; font-weight: 700; }
+.tweet-actions .is-liked { color: #e23c79; font-weight: 700; }
+.empty-state { margin: 0; padding: 36px 20px; color: #6b7b92; text-align: center; }
+@media (max-width: 480px) { .app { padding: 28px 12px; } .tweet { padding: 16px 14px; } .tweet-actions { gap: 13px; } }

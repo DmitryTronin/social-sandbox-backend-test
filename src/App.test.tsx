@@ -56,4 +56,23 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Like (128)' })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^Liked/ })).toHaveLength(1);
   });
+
+  it('filters posts by text or author', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search the conversation' }), 'Jane');
+
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(screen.getByText('Just shipped a new feature! Feeling great about the team effort.')).toBeInTheDocument();
+  });
+
+  it('increments the reply count for the selected post', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'Reply (5)' }));
+
+    expect(screen.getByRole('button', { name: 'Reply (6)' })).toBeInTheDocument();
+  });
 });
