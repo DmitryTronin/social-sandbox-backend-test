@@ -14,6 +14,13 @@ export const Tweet: React.FC<TweetProps> = ({
   onRetweet,
   onReply,
 }) => {
+  const postedAt = new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(tweet.createdAt));
+
   return (
     <article className="tweet" style={{ display: 'flex', gap: 12, padding: '12px 16px', borderBottom: '1px solid #e1e8ed' }}>
       <img
@@ -25,6 +32,8 @@ export const Tweet: React.FC<TweetProps> = ({
         <div className="tweet-header" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span className="name" style={{ fontWeight: 700 }}>{tweet.author.name}</span>
           <span className="handle" style={{ color: '#536471' }}>@{tweet.author.handle}</span>
+          <span aria-hidden="true" style={{ color: '#536471' }}>·</span>
+          <time dateTime={tweet.createdAt} style={{ color: '#536471' }}>{postedAt}</time>
         </div>
         <p className="tweet-text" style={{ margin: '4px 0 8px' }}>{tweet.text}</p>
         <div className="tweet-actions" style={{ display: 'flex', gap: 24 }}>

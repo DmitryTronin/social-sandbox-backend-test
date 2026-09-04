@@ -39,11 +39,20 @@ export const sampleTweets: TweetData[] = [
   },
   {
     id: '5',
-    text: 'Morning coffee + code review = perfect start to the day.',
+    text: 'Morning coffee + code review = a perfect start to the day.',
     author: { name: 'Morgan Lee', handle: 'morganlee', avatarUrl: '/avatars/avatar-5.svg' },
     createdAt: '2024-01-16T08:00:00Z',
     likes: 73,
     retweets: 8,
     replies: 3,
+  },
+  {
+    id: '6',
+    text: 'Small signals become big changes when a team keeps listening.',
+    author: { name: 'Riley Park', handle: 'rileybuilds', avatarUrl: '/avatars/avatar-6.svg' },
+    createdAt: '2024-01-16T09:20:00Z',
+    likes: 61,
+    retweets: 14,
+    replies: 6,
   },
 ];
