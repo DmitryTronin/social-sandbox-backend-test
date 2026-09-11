@@ -4,70 +4,56 @@ set -euo pipefail
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WORKSPACE_DIR"
 
-ENV_FILE="$HOME/.social-sandbox-backend-test.env"
-PROFILE_MARKER='# social-sandbox-backend-test environment'
-printf '%s\n' 'export VITE_API_URL=http://localhost:8081' >"$ENV_FILE"
-
-profile=""
-for candidate in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
-  if [ -f "$candidate" ]; then
-    profile="$candidate"
-    break
-  fi
-done
-if [ -z "$profile" ]; then
-  profile="$HOME/.profile"
-  : >"$profile"
+if [ "${AIR_STARTUP_MODE:-}" = "warmup" ]; then
+  WARMUP=1
+else
+  WARMUP=
 fi
-for shell_profile in "$profile" "$HOME/.bashrc"; do
-  touch "$shell_profile"
-  if ! grep -Fqx "$PROFILE_MARKER" "$shell_profile"; then
-    {
-      printf '\n%s\n' "$PROFILE_MARKER"
-      printf '[ -f "%s" ] && . "%s"\n' "$ENV_FILE" "$ENV_FILE"
-    } >>"$shell_profile"
-  fi
-done
 
-export VITE_API_URL=http://localhost:8081
+healthcheck() {
+  local attempt=0
 
-echo 'Installing JavaScript dependencies'
-# The fixture's committed lockfile intentionally lacks optional esbuild platform
-# packages required by newer npm versions. Do not rewrite product files during
-# environment setup; resolve the manifest into the cached node_modules tree.
+  until curl --fail --silent --show-error -H 'Host: forwarded.example.test' http://127.0.0.1:5173/ | grep -q 'AIRC-506 Wrong Backend Repro'; do
+    attempt=$((attempt + 1))
+    printf 'Waiting for Vite frontend (attempt %s)\n' "$attempt"
+    sleep 2
+  done
+
+  until curl --fail --silent --show-error http://127.0.0.1:8081/api/health | grep -q '"service":"social-sandbox-backend-test"'; do
+    attempt=$((attempt + 1))
+    printf 'Waiting for FastAPI backend (attempt %s)\n' "$attempt"
+    sleep 2
+  done
+
+  printf 'Frontend and backend health checks passed.\n'
+}
+
+printf 'Installing frontend dependencies.\n'
+# The fixture lockfile lacks optional esbuild platform packages that newer npm
+# versions require. Resolve them into node_modules without changing product files.
 npm install --no-save --package-lock=false
-echo 'Creating Python virtual environment'
+
+printf 'Installing backend dependencies.\n'
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-echo 'Priming frontend production build and test caches'
-npm run build
-npm test
+.venv/bin/pip install --requirement requirements.txt
+
+if [ -n "${WARMUP:-}" ]; then
+  printf 'Priming the frontend build cache.\n'
+  npm run build
+fi
+
+printf 'Starting backend and frontend services.\n'
+nohup .venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8081 > /tmp/social-sandbox-backend.log 2>&1 &
 
 VITE_CONFIG="$WORKSPACE_DIR/.air/cloud/vite.air.config.mjs"
-cat >"$VITE_CONFIG" <<EOF
+cat > "$VITE_CONFIG" <<EOF
 import { mergeConfig } from 'vite';
 import baseConfig from '${WORKSPACE_DIR}/vite.config.ts';
 
 export default mergeConfig(baseConfig, { server: { allowedHosts: true } });
 EOF
-
-echo 'Starting FastAPI backend on port 8081'
-nohup .venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8081 > /tmp/social-sandbox-backend.log 2>&1 &
-echo 'Starting Vite frontend on port 5173'
 nohup npm run start:frontend -- --config "$VITE_CONFIG" > /tmp/social-sandbox-frontend.log 2>&1 &
 
-healthcheck() {
-  while true; do
-    if curl -fsS http://localhost:8081/api/health | grep -Fq '"service":"social-sandbox-backend-test"' \
-      && curl -fsS -H 'Host: forwarded.example.test' http://localhost:5173/ | grep -Fq 'AIRC-506 Wrong Backend Repro'; then
-      echo 'Backend and frontend are ready.'
-      return 0
-    fi
-    echo 'Waiting for backend and frontend readiness...'
-    sleep 2
-  done
-}
-
-if [ "${AIR_STARTUP_MODE:-}" = warmup ]; then
+if [ -n "${WARMUP:-}" ]; then
   healthcheck
 fi
