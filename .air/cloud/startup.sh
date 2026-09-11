@@ -32,7 +32,10 @@ done
 export VITE_API_URL=http://localhost:8081
 
 echo 'Installing JavaScript dependencies'
-npm ci
+# The fixture's committed lockfile intentionally lacks optional esbuild platform
+# packages required by newer npm versions. Do not rewrite product files during
+# environment setup; resolve the manifest into the cached node_modules tree.
+npm install --no-save --package-lock=false
 echo 'Creating Python virtual environment'
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
