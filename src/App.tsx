@@ -1,50 +1,24 @@
-import { useState } from 'react';
-import { Tweet } from './components/Tweet';
-import { sampleTweets } from '@/data/tweets';
+import { useEffect, useState } from 'react';
 
 function App() {
-  const [tweets, setTweets] = useState(sampleTweets);
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const [message, setMessage] = useState('Loading...');
 
-  const toggleLike = (id: string) => {
-    setTweets((prev) =>
-      prev.map((tweet) =>
-        tweet.id === id
-          ? {
-              ...tweet,
-              likedByMe: !tweet.likedByMe,
-              likes: tweet.likes + (tweet.likedByMe ? -1 : 1),
-            }
-          : tweet,
-      ),
-    );
-  };
-
-  const toggleRetweet = (id: string) => {
-    setTweets((prev) =>
-      prev.map((tweet) =>
-        tweet.id === id
-          ? {
-              ...tweet,
-              retweetedByMe: !tweet.retweetedByMe,
-              retweets: tweet.retweets + (tweet.retweetedByMe ? -1 : 1),
-            }
-          : tweet,
-      ),
-    );
-  };
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/message`)
+      .then((response) => response.text())
+      .then(setMessage)
+      .catch((error: unknown) => {
+        setMessage(error instanceof Error ? error.message : String(error));
+      });
+  }, []);
 
   return (
-    <div className="app">
-      <h1>Tweet Viewer</h1>
-      {tweets.map((tweet) => (
-        <Tweet
-          key={tweet.id}
-          tweet={tweet}
-          onLike={toggleLike}
-          onRetweet={toggleRetweet}
-        />
-      ))}
-    </div>
+    <main>
+      <h1>API message</h1>
+      <p>Configured API URL: {apiUrl}</p>
+      <pre>{message}</pre>
+    </main>
   );
 }
 

@@ -1,59 +1,33 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders the tweet viewer with sample tweets', () => {
-    render(<App />);
-
-    expect(screen.getByRole('heading', { name: 'Tweet Viewer' })).toBeInTheDocument();
-    expect(screen.getAllByRole('article').length).toBeGreaterThan(0);
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
   });
 
-  it('mounts the app through the browser entry point', async () => {
-    const root = document.createElement('div');
-    root.id = 'root';
-    document.body.appendChild(root);
+  it('requests the local backend message endpoint', async () => {
+    vi.stubEnv('VITE_API_URL', 'http://localhost:8081');
+    const fetchMock = vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue('Hello from the API'),
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
-    try {
-      await import('./main');
-
-      expect(await screen.findByRole('heading', { name: 'Tweet Viewer' })).toBeInTheDocument();
-    } finally {
-      root.remove();
-    }
-  });
-
-  it('toggles a like on and off with live counts', async () => {
-    const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: 'Like (42)' }));
-    expect(screen.getByRole('button', { name: 'Liked (43)' })).toHaveAttribute('aria-pressed', 'true');
-
-    await user.click(screen.getByRole('button', { name: 'Liked (43)' }));
-    expect(screen.getByRole('button', { name: 'Like (42)' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Configured API URL: http://localhost:8081')).toBeInTheDocument();
+    expect(await screen.findByText('Hello from the API')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8081/api/message');
   });
 
-  it('toggles a retweet on and off with live counts', async () => {
-    const user = userEvent.setup();
+  it('displays the exact network error', async () => {
+    vi.stubEnv('VITE_API_URL', 'http://api.example.test');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
     render(<App />);
 
-    await user.click(screen.getByRole('button', { name: 'Retweet (10)' }));
-    expect(screen.getByRole('button', { name: 'Retweeted (11)' })).toHaveAttribute('aria-pressed', 'true');
-
-    await user.click(screen.getByRole('button', { name: 'Retweeted (11)' }));
-    expect(screen.getByRole('button', { name: 'Retweet (10)' })).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('only affects the clicked tweet', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    await user.click(screen.getByRole('button', { name: 'Like (42)' }));
-
-    expect(screen.getByRole('button', { name: 'Like (128)' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /^Liked/ })).toHaveLength(1);
+    expect(await screen.findByText('Failed to fetch')).toBeInTheDocument();
   });
 });
